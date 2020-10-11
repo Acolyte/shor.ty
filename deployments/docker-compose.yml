@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+
+  shorty:
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+    depends_on:
+      - db
+      - redis
+      - clickhouse
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+        - SYS_PTRACE
+    privileged: true
+    working_dir: /usr/local/app
+    environment:
+      - DB_HOST=db
+      - DB_USERNAME=db
+      - DB_PASSWORD=db
+      - DB_DATABASE=db
+      - REDIS_HOST=redis
+      - CH_DSN=tcp://clickhouse:9000?debug=true&max_query_size=4194304
+
+  redis:
+    image: library/redis
+    volumes:
+      - ../data/redis:/data
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=db
+      - POSTGRES_PASSWORD=db
+      - POSTGRES_DB=db  
+    volumes:
+      - ../data/db/postgresdata:/var/lib/postgresql/data
+
+  clickhouse:
+    image: yandex/clickhouse-server
+    environment:
+      - TZ=UTC
+    volumes:
+      - ../data/clickhouse:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  swagger:
+    image: swaggerapi/swagger-ui

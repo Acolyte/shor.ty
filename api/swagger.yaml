@@ -1,0 +1,206 @@
+basePath: /api/v1
+definitions:
+  models.Link:
+    properties:
+      fullURL:
+        type: string
+      shortURL:
+        type: string
+    type: object
+host: shor.ty
+info:
+  contact:
+    email: acolytee@gmail.com
+    name: API Development
+    url: https://github.com/Acolyte/shor.ty
+  description: API for working with shor.ty.
+  license:
+    name: Public
+  termsOfService: http://swagger.io/terms/
+  title: Shorty API
+  version: "1.0"
+paths:
+  /link/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes link by identifier
+      operationId: delete-link
+      parameters:
+      - description: Link identifier
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a link by identifier
+      tags:
+      - Links
+  /links:
+    get:
+      description: Fetches a list of links
+      operationId: get-links-list
+      parameters:
+      - description: Links per page
+        in: query
+        name: count
+        type: integer
+      - description: Page offset
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Link'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Fetch a list of links
+      tags:
+      - Links
+    post:
+      consumes:
+      - application/json
+      description: Creates a link
+      operationId: create-link
+      parameters:
+      - description: Create a link request
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/models.Link'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "1"
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create a link
+      tags:
+      - Links
+  /links/{id}:
+    get:
+      description: Fetches link by unique identifier
+      operationId: get-link-by-id
+      parameters:
+      - description: Link identifier
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Link'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Fetch link by unique identifier
+      tags:
+      - Links
+    put:
+      consumes:
+      - application/json
+      description: Updates link by identifier
+      operationId: update-link-by-id
+      parameters:
+      - description: Link identifier
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Link data
+        in: body
+        name: params
+        required: true
+        schema:
+          $ref: '#/definitions/models.Link'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update link by identifier
+      tags:
+      - Links
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-AUTH-TOKEN
+    type: apiKey
+swagger: "2.0"
