@@ -23,6 +23,5 @@
 .env
 data/
 vendor/
-
-
+deployments/docker-compose.override.yml
 /go.sum

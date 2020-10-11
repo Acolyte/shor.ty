@@ -6,6 +6,7 @@ import (
 	"github.com/go-ozzo/ozzo-routing/v2/access"
 	"github.com/go-ozzo/ozzo-routing/v2/content"
 	"github.com/go-ozzo/ozzo-routing/v2/fault"
+	"github.com/go-ozzo/ozzo-routing/v2/file"
 	"github.com/go-ozzo/ozzo-routing/v2/slash"
 	"log"
 	"net/http"
@@ -34,6 +35,10 @@ import (
 
 func Serve() {
 	router := routing.New()
+
+	router.Get("/swagger/swagger.json", file.Content("swagger/swagger.json"))
+	router.Get("/swagger/swagger.yaml", file.Content("swagger/swagger.yaml"))
+
 	apiV1 := router.Group("/api/v1")
 	apiV1.Use(
 		// all these handlers are shared by every route
