@@ -71,7 +71,7 @@ func LinkUpdateHandler(c *routing.Context) error {
 // @Failure 500 {object} string
 // @Router /links [post]
 func LinkCreateHandler(c *routing.Context) error {
-	return nil
+	return c.Write("OK")
 }
 
 // LinkDeleteHandler godoc
