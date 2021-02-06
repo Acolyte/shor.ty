@@ -38,6 +38,7 @@ func Serve() {
 
 	router.Get("/swagger/swagger.json", file.Content("swagger/swagger.json"))
 	router.Get("/swagger/swagger.yaml", file.Content("swagger/swagger.yaml"))
+	router.Get("/<id>", shorty.LinkByUUIDHandler)
 	router.Get("/*", file.Server(file.PathMap{
 		"/": "/web/",
 	}))
