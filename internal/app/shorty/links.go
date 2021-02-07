@@ -1,15 +1,18 @@
 package shorty
 
 import (
+	"errors"
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/rs/xid"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"shorty/internal/app/config"
 	"shorty/pkg/shorty"
 	"strconv"
+	"time"
 )
 
 func IndexHandler(c *routing.Context) error {
@@ -28,12 +31,17 @@ func IndexHandler(c *routing.Context) error {
 
 func CreateHandler(c *routing.Context) error {
 	URL := c.Form("url")
+	ExpiresIn := c.Form("expiresIn")
+	if ExpiresIn == "" {
+		ExpiresIn = shorty.Period1day
+	}
+
 	if len(URL) == 0 {
 		c.Response.Header().Set("Location", c.Request.URL.String())
 		return c.WriteWithStatus("No Content", 204)
 	}
 
-	link, errCode := CreateLink(URL)
+	link, errCode := CreateLink(URL, ExpiresIn)
 	if errCode != 0 && errCode != 302 {
 		return c.WriteWithStatus(http.StatusText(errCode), errCode)
 	}
@@ -148,8 +156,12 @@ func LinkUpdateHandler(c *routing.Context) error {
 // @Router /links [post]
 func LinkCreateHandler(c *routing.Context) error {
 	URL := c.Form("url")
+	ExpiresIn := c.Form("expiresIn")
+	if ExpiresIn == "" {
+		ExpiresIn = shorty.Period1day
+	}
 
-	link, errCode := CreateLink(URL)
+	link, errCode := CreateLink(URL, ExpiresIn)
 	if errCode != 0 {
 		return c.WriteWithStatus(http.StatusText(errCode), errCode)
 	}
@@ -175,7 +187,7 @@ func LinkDeleteHandler(c *routing.Context) error {
 	return nil
 }
 
-func CreateLink(URL string) (link shorty.Link, error int) {
+func CreateLink(URL string, ExpiresIn string) (link shorty.Link, error int) {
 	u, err := url.Parse(URL)
 	if err != nil {
 		return link, http.StatusBadRequest
@@ -214,6 +226,13 @@ func CreateLink(URL string) (link shorty.Link, error int) {
 	link.Query = u.Query().Encode()
 	link.FullURL = URL
 
+	duration, err := GetDuration(ExpiresIn)
+	if err != nil {
+		log.Println("Cannot parse duration from string value", ExpiresIn)
+	} else {
+		link.ExpiresAt = time.Now().Add(duration)
+		link.ExpiresIn = ExpiresIn
+	}
 	existing := shorty.Link{}
 	err = config.Gorm.Where("scheme = ? AND host = ? AND path = ? AND query = ?", link.Scheme, link.Host, link.Path, link.Query).First(&existing).Error
 	if existing.ID != 0 {
@@ -226,4 +245,50 @@ func CreateLink(URL string) (link shorty.Link, error int) {
 	}
 
 	return link, 0
+}
+
+func GetDuration(ExpiresIn string) (Duration time.Duration, err error) {
+	switch ExpiresIn {
+	case shorty.Period5min:
+		fallthrough
+	case shorty.Period30min:
+		fallthrough
+	case shorty.Period1hour:
+		fallthrough
+	case shorty.Period1day:
+		fallthrough
+	case shorty.Period1week:
+		fallthrough
+	case shorty.Period1month:
+		fallthrough
+	case shorty.Period1year:
+		return ParseDuration(ExpiresIn), nil
+	}
+
+	return time.Duration(0), errors.New("Invalid duration period")
+}
+
+var durationRegex = regexp.MustCompile(`P([\d\.]+Y)?([\d\.]+M)?([\d\.]+D)?T?([\d\.]+H)?([\d\.]+M)?([\d\.]+?S)?`)
+
+// ParseDuration converts a ISO8601 duration into a time.Duration
+func ParseDuration(str string) time.Duration {
+	matches := durationRegex.FindStringSubmatch(str)
+
+	years := parseDurationPart(matches[1], time.Hour*24*365)
+	months := parseDurationPart(matches[2], time.Hour*24*30)
+	days := parseDurationPart(matches[3], time.Hour*24)
+	hours := parseDurationPart(matches[4], time.Hour)
+	minutes := parseDurationPart(matches[5], time.Second*60)
+	seconds := parseDurationPart(matches[6], time.Second)
+
+	return time.Duration(years + months + days + hours + minutes + seconds)
+}
+
+func parseDurationPart(value string, unit time.Duration) time.Duration {
+	if len(value) != 0 {
+		if parsed, err := strconv.ParseFloat(value[:len(value)-1], 64); err == nil {
+			return time.Duration(float64(unit) * parsed)
+		}
+	}
+	return 0
 }

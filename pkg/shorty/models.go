@@ -10,10 +10,11 @@ type (
 		ID   uint   `gorm:"primarykey" json:"-"`
 		UUID string `db:"uuid" json:"uuid" gorm:"size:32, uniqueIndex"`
 
-		CreatedAt time.Time    `json:"-"`
-		UpdatedAt time.Time    `json:"-"`
-		DeletedAt sql.NullTime `gorm:"index" json:"-"`
-		ExpiresAt time.Time    `json:"expiresAt"`
+		CreatedAt time.Time    `db:"created_at" json:"-"`
+		UpdatedAt time.Time    `db:"updated_at" json:"-"`
+		DeletedAt sql.NullTime `db:"deleted_at" gorm:"index" json:"-"`
+		ExpiresIn string       `db:"-" json:"expireIn"`
+		ExpiresAt time.Time    `db:"expires_at" json:"expiresAt"`
 
 		FullURL string `db:"full_url" json:"fullUrl" gorm:"size:2048"`
 		Scheme  string `db:"scheme" json:"-" gorm:"size:8,index:idx_scheme"`
