@@ -11,8 +11,8 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"os"
-	"shorty/internal/app/shorty"
 	"strconv"
+	"text/template"
 	"time"
 )
 
@@ -108,6 +108,10 @@ func init() {
 	// load .env file
 	err := godotenv.Load(".env")
 
+	Templates = make(map[string]*template.Template)
+	Templates["index"] = template.Must(template.ParseFiles("./web/template/index.html"))
+	Templates["found"] = template.Must(template.ParseFiles("./web/template/found.html"))
+
 	Settings = &Config{
 		Server: ServerConfig{
 			Host: getEnv("SERVER_HOST", "0.0.0.0"),
@@ -155,9 +159,9 @@ func init() {
 	conn.SetMaxIdleConns(25)
 	conn.SetConnMaxLifetime(5 * time.Minute)
 	Settings.Database.Connection = conn
-	shorty.Database = conn
+	Database = conn
 
-	shorty.Gorm, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	Gorm, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}

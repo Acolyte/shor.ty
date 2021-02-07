@@ -22,4 +22,9 @@ type (
 		Path    string `db:"path" json:"-" gorm:"index:idx_path"`
 		Query   string `db:"query" json:"-" gorm:"index:idx_query"`
 	}
+
+	FoundViewData struct {
+		Link
+		HostURL string
+	}
 )

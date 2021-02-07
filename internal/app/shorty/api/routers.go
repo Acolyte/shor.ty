@@ -38,10 +38,16 @@ func Serve() {
 
 	router.Get("/swagger/swagger.json", file.Content("swagger/swagger.json"))
 	router.Get("/swagger/swagger.yaml", file.Content("swagger/swagger.yaml"))
-	router.Get("/<id>", shorty.LinkByUUIDHandler)
-	router.Get("/*", file.Server(file.PathMap{
-		"/": "/web/",
+	router.Get("/css/*", file.Server(file.PathMap{
+		"/": "/web/static/",
 	}))
+	router.Get("/js/*", file.Server(file.PathMap{
+		"/": "/web/static/",
+	}))
+	router.Get("/", shorty.IndexHandler)
+	router.Post("/", shorty.CreateHandler)
+
+	router.Get("/<id:[0-9a-zA-Z]*>", shorty.LinkByUUIDHandler)
 
 	apiV1 := router.Group(`/api/v1`)
 	apiV1.Use(

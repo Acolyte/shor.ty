@@ -4,10 +4,53 @@ import (
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/rs/xid"
 	"gorm.io/gorm"
+	"log"
+	"net/http"
 	"net/url"
+	"shorty/internal/app/config"
 	"shorty/pkg/shorty"
 	"strconv"
 )
+
+func IndexHandler(c *routing.Context) error {
+	tmpl := config.Templates["index"]
+	if tmpl == nil {
+		return c.WriteWithStatus("Internal Server Error", 500)
+	}
+
+	if err := tmpl.Execute(c.Response, nil); err != nil {
+		log.Printf("Failed to execute template: %v", err)
+		return c.WriteWithStatus("Internal Server Error", 500)
+	}
+
+	return nil
+}
+
+func CreateHandler(c *routing.Context) error {
+	URL := c.Form("url")
+	if len(URL) == 0 {
+		c.Response.Header().Set("Location", c.Request.URL.String())
+		return c.WriteWithStatus("No Content", 204)
+	}
+
+	link, errCode := CreateLink(URL)
+	if errCode != 0 && errCode != 302 {
+		return c.WriteWithStatus(http.StatusText(errCode), errCode)
+	}
+
+	tmpl := config.Templates["found"]
+	if tmpl == nil {
+		return c.WriteWithStatus("Internal Server Error", 500)
+	}
+
+	viewData := shorty.FoundViewData{HostURL: "http://" + c.Request.Host, Link: link}
+	if err := tmpl.Execute(c.Response, viewData); err != nil {
+		log.Printf("Failed to execute template: %v", err)
+		return c.WriteWithStatus("Internal Server Error", 500)
+	}
+
+	return nil
+}
 
 // LinkByUUIDHandler godoc
 // @Security ApiKeyAuth
@@ -20,9 +63,17 @@ import (
 func LinkByUUIDHandler(c *routing.Context) error {
 	uuid := c.Param("id")
 	link := shorty.Link{}
-	err := Gorm.Model(&shorty.Link{}).Where("short_url = ?", uuid).First(&link).Error
+	err := config.Gorm.Model(&link).Where("uuid = ?", uuid).First(&link).Error
 	if err == gorm.ErrRecordNotFound {
-		return c.WriteWithStatus("Not Found", 404)
+		tmpl := config.Templates["not_found"]
+		if tmpl == nil {
+			return c.WriteWithStatus("Internal Server Error", 500)
+		}
+
+		if err := tmpl.Execute(c.Response, nil); err != nil {
+			log.Printf("Failed to execute template: %v", err)
+			return c.WriteWithStatus("Internal Server Error", 500)
+		}
 	}
 
 	c.Response.Header().Set("Location", link.FullURL)
@@ -97,56 +148,12 @@ func LinkUpdateHandler(c *routing.Context) error {
 // @Router /links [post]
 func LinkCreateHandler(c *routing.Context) error {
 	URL := c.Form("url")
-	u, err := url.Parse(URL)
-	if err != nil {
-		return c.WriteWithStatus("Bad Request", 400)
+
+	link, errCode := CreateLink(URL)
+	if errCode != 0 {
+		return c.WriteWithStatus(http.StatusText(errCode), errCode)
 	}
 
-	link := shorty.Link{}
-	UUID := ""
-	Found := true
-	for index := 0; index < 10; index++ {
-		UUID = xid.New().String()
-		err := Gorm.Where("uuid = ?", xid.New().String()).Find(&shorty.Link{}).Error
-		if err == nil || err == gorm.ErrRecordNotFound {
-			Found = false
-			break
-		} else {
-			Found = true
-		}
-	}
-
-	if Found {
-		return c.WriteWithStatus("Internal Server Error", 500)
-	}
-
-	link.UUID = UUID
-	link.Host = u.Host
-
-	if len(u.Port()) != 0 {
-		link.Port, err = strconv.Atoi(u.Port())
-		if err != nil {
-
-		}
-	} else {
-		link.Port = 80
-	}
-	link.Scheme = u.Scheme
-	link.Path = u.Path
-	link.Query = u.Query().Encode()
-
-	existing := shorty.Link{}
-	err = Gorm.Debug().Where("scheme = ? AND host = ? AND path = ? AND query = ?", link.Scheme, link.Host, link.Path, link.Query).First(&existing).Error
-	if existing.ID != 0 {
-		return c.WriteWithStatus(existing, 302)
-	}
-
-	err = Gorm.Save(&link).Error
-	if err != nil {
-		return c.WriteWithStatus("Bad Request", 400)
-	}
-
-	c.Response.Header().Set("Content-Type", "application/json")
 	return c.Write(link)
 }
 
@@ -166,4 +173,57 @@ func LinkCreateHandler(c *routing.Context) error {
 // @Router /link/{id} [delete]
 func LinkDeleteHandler(c *routing.Context) error {
 	return nil
+}
+
+func CreateLink(URL string) (link shorty.Link, error int) {
+	u, err := url.Parse(URL)
+	if err != nil {
+		return link, http.StatusBadRequest
+	}
+
+	UUID := ""
+	Found := true
+	for index := 0; index < 10; index++ {
+		UUID = xid.New().String()
+		err := config.Gorm.Where("uuid = ?", xid.New().String()).Find(&shorty.Link{}).Error
+		if err == nil || err == gorm.ErrRecordNotFound {
+			Found = false
+			break
+		} else {
+			Found = true
+		}
+	}
+
+	if Found {
+		return link, http.StatusInternalServerError
+	}
+
+	link.UUID = UUID
+	link.Host = u.Host
+
+	if len(u.Port()) != 0 {
+		link.Port, err = strconv.Atoi(u.Port())
+		if err != nil {
+
+		}
+	} else {
+		link.Port = 80
+	}
+	link.Scheme = u.Scheme
+	link.Path = u.Path
+	link.Query = u.Query().Encode()
+	link.FullURL = URL
+
+	existing := shorty.Link{}
+	err = config.Gorm.Where("scheme = ? AND host = ? AND path = ? AND query = ?", link.Scheme, link.Host, link.Path, link.Query).First(&existing).Error
+	if existing.ID != 0 {
+		return existing, http.StatusFound
+	}
+
+	err = config.Gorm.Save(&link).Error
+	if err != nil {
+		return shorty.Link{}, http.StatusInternalServerError
+	}
+
+	return link, 0
 }
