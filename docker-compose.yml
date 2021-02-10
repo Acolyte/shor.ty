@@ -38,7 +38,9 @@ services:
       - ./data/redis:/data
 
   clickhouse:
-    image: yandex/clickhouse-server
+    build:
+      context: clickhouse
+      dockerfile: Dockerfile
     environment:
       - TZ=UTC
     volumes:
