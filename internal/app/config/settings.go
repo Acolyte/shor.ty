@@ -3,13 +3,14 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/ClickHouse/clickhouse-go"
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rbcervilla/redisstore"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"log"
 	"os"
 	"strconv"
 	"text/template"
@@ -105,9 +106,6 @@ func getEnvAsInt(name string, defaultVal int) int {
 }
 
 func init() {
-	// load .env file
-	err := godotenv.Load(".env")
-
 	Templates = make(map[string]*template.Template)
 	Templates["index"] = template.Must(template.ParseFiles("./web/template/index.html"))
 	Templates["found"] = template.Must(template.ParseFiles("./web/template/found.html"))
@@ -184,7 +182,7 @@ func init() {
 		panic(err)
 	}
 
-	/*ch, err := sqlx.Open(Settings.Clickhouse.ConnectionType, Settings.Clickhouse.ConnectionSettings.DSN)
+	ch, err := sqlx.Open(Settings.Clickhouse.ConnectionType, Settings.Clickhouse.ConnectionSettings.DSN)
 	if err != nil {
 		panic(err)
 	}
@@ -196,5 +194,5 @@ func init() {
 		}
 	}
 	Settings.Clickhouse.Connection = ch
-	shorty.Clickhouse = ch*/
+	Clickhouse = ch
 }

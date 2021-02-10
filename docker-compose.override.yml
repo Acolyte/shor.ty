@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+
+  shorty-db:
+    ports:
+      - 15432:5432
+      
+  clickhouse:
+    ports:
+      - 18123:8123
