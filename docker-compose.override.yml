@@ -2,6 +2,10 @@ version: '3.7'
 
 services:
 
+  shorty:
+    ports:
+      - 8181:80
+
   shorty-db:
     ports:
       - 15432:5432

@@ -161,7 +161,7 @@ func init() {
 
 	Gorm, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic("failed to connect to the database")
 	}
 
 	client := redis.NewClient(&redis.Options{
@@ -184,15 +184,17 @@ func init() {
 
 	ch, err := sqlx.Open(Settings.Clickhouse.ConnectionType, Settings.Clickhouse.ConnectionSettings.DSN)
 	if err != nil {
-		panic(err)
-	}
-	if err := ch.Ping(); err != nil {
-		if exception, ok := err.(*clickhouse.Exception); ok {
-			log.Fatalf("[%d] %s \n%s\n", exception.Code, exception.Message, exception.StackTrace)
-		} else {
-			panic(err)
+		log.Println("Clickhouse not available")
+	} else {
+		if err := ch.Ping(); err != nil {
+			if exception, ok := err.(*clickhouse.Exception); ok {
+				log.Println("[%d] %s \n%s\n", exception.Code, exception.Message, exception.StackTrace)
+			} else {
+				log.Println("Clickhouse is not yet available")
+			}
 		}
 	}
+
 	Settings.Clickhouse.Connection = ch
 	Clickhouse = ch
 }
