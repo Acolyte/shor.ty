@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"regexp"
 	"shorty/internal/app/config"
-	"shorty/pkg/shorty"
+	"shorty/pkg/primary"
 	"strconv"
 	"time"
 )
@@ -33,7 +33,7 @@ func CreateHandler(c *routing.Context) error {
 	URL := c.Form("url")
 	ExpiresIn := c.Form("expiresIn")
 	if ExpiresIn == "" {
-		ExpiresIn = shorty.Period1day
+		ExpiresIn = primary.Period1day
 	}
 
 	if len(URL) == 0 {
@@ -51,7 +51,7 @@ func CreateHandler(c *routing.Context) error {
 		return c.WriteWithStatus("Internal Server Error", 500)
 	}
 
-	viewData := shorty.FoundViewData{HostURL: "http://" + c.Request.Host, Link: link}
+	viewData := primary.FoundViewData{HostURL: "http://" + c.Request.Host, Link: link}
 	if err := tmpl.Execute(c.Response, viewData); err != nil {
 		log.Printf("Failed to execute template: %v", err)
 		return c.WriteWithStatus("Internal Server Error", 500)
@@ -70,7 +70,7 @@ func CreateHandler(c *routing.Context) error {
 // @Router /{id} [get]
 func LinkByUUIDHandler(c *routing.Context) error {
 	uuid := c.Param("id")
-	link := shorty.Link{}
+	link := primary.Link{}
 	err := config.Gorm.Model(&link).Where("uuid = ?", uuid).First(&link).Error
 	if err == gorm.ErrRecordNotFound {
 		tmpl := config.Templates["not_found"]
@@ -96,7 +96,7 @@ func LinkByUUIDHandler(c *routing.Context) error {
 // @Tags Links
 // @Produce json
 // @Param id path int true "Link identifier"
-// @Success 200 {object} models.Link
+// @Success 200 {object} primary.Link
 // @Failure 400 {object} string
 // @Failure 404 {object} string
 // @Failure 500 {object} string
@@ -114,30 +114,11 @@ func LinkByIDHandler(c *routing.Context) error {
 // @Produce json
 // @Param count query int false "Links per page"
 // @Param page query int false "Page offset"
-// @Success 200 {array} models.Link
+// @Success 200 {array} primary.Link
 // @Failure 400 {object} string
 // @Failure 404 {object} string
 // @Router /links [get]
 func LinksListHandler(c *routing.Context) error {
-	return nil
-}
-
-// LinkUpdateHandler godoc
-// @Security ApiKeyAuth
-// @Summary Update link by identifier
-// @Description Updates link by identifier
-// @ID update-link-by-id
-// @Tags Links
-// @Accept json
-// @Produce json
-// @Param id path int true "Link identifier"
-// @Param params body models.Link true "Link data"
-// @Success 200 {string} string ""
-// @Failure 400 {object} string
-// @Failure 404 {object} string
-// @Failure 500 {object} string
-// @Router /links/{id} [put]
-func LinkUpdateHandler(c *routing.Context) error {
 	return nil
 }
 
@@ -149,7 +130,7 @@ func LinkUpdateHandler(c *routing.Context) error {
 // @Tags Links
 // @Accept json
 // @Produce json
-// @Param params body models.Link true "Create a link request"
+// @Param params body primary.Link true "Create a link request"
 // @Success 200 {integer} string "1"
 // @Failure 400 {object} string
 // @Failure 500 {object} string
@@ -158,7 +139,7 @@ func LinkCreateHandler(c *routing.Context) error {
 	URL := c.Form("url")
 	ExpiresIn := c.Form("expiresIn")
 	if ExpiresIn == "" {
-		ExpiresIn = shorty.Period1day
+		ExpiresIn = primary.Period1day
 	}
 
 	link, errCode := CreateLink(URL, ExpiresIn)
@@ -187,7 +168,7 @@ func LinkDeleteHandler(c *routing.Context) error {
 	return nil
 }
 
-func CreateLink(URL string, ExpiresIn string) (link shorty.Link, error int) {
+func CreateLink(URL string, ExpiresIn string) (link primary.Link, error int) {
 	u, err := url.Parse(URL)
 	if err != nil {
 		return link, http.StatusBadRequest
@@ -197,7 +178,7 @@ func CreateLink(URL string, ExpiresIn string) (link shorty.Link, error int) {
 	Found := true
 	for index := 0; index < 10; index++ {
 		UUID = xid.New().String()
-		err := config.Gorm.Where("uuid = ?", xid.New().String()).Find(&shorty.Link{}).Error
+		err := config.Gorm.Where("uuid = ?", xid.New().String()).Find(&primary.Link{}).Error
 		if err == nil || err == gorm.ErrRecordNotFound {
 			Found = false
 			break
@@ -233,7 +214,7 @@ func CreateLink(URL string, ExpiresIn string) (link shorty.Link, error int) {
 		link.ExpiresAt = time.Now().Add(duration)
 		link.ExpiresIn = ExpiresIn
 	}
-	existing := shorty.Link{}
+	existing := primary.Link{}
 	err = config.Gorm.Where("scheme = ? AND host = ? AND path = ? AND query = ?", link.Scheme, link.Host, link.Path, link.Query).First(&existing).Error
 	if existing.ID != 0 {
 		return existing, http.StatusFound
@@ -241,7 +222,7 @@ func CreateLink(URL string, ExpiresIn string) (link shorty.Link, error int) {
 
 	err = config.Gorm.Save(&link).Error
 	if err != nil {
-		return shorty.Link{}, http.StatusInternalServerError
+		return primary.Link{}, http.StatusInternalServerError
 	}
 
 	return link, 0
@@ -249,19 +230,19 @@ func CreateLink(URL string, ExpiresIn string) (link shorty.Link, error int) {
 
 func GetDuration(ExpiresIn string) (Duration time.Duration, err error) {
 	switch ExpiresIn {
-	case shorty.Period5min:
+	case primary.Period5min:
 		fallthrough
-	case shorty.Period30min:
+	case primary.Period30min:
 		fallthrough
-	case shorty.Period1hour:
+	case primary.Period1hour:
 		fallthrough
-	case shorty.Period1day:
+	case primary.Period1day:
 		fallthrough
-	case shorty.Period1week:
+	case primary.Period1week:
 		fallthrough
-	case shorty.Period1month:
+	case primary.Period1month:
 		fallthrough
-	case shorty.Period1year:
+	case primary.Period1year:
 		return ParseDuration(ExpiresIn), nil
 	}
 

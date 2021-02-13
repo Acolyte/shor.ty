@@ -109,7 +109,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Link"
+                                "$ref": "#/definitions/primary.Link"
                             }
                         }
                     },
@@ -152,7 +152,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Link"
+                            "$ref": "#/definitions/primary.Link"
                         }
                     }
                 ],
@@ -207,70 +207,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Link"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Updates link by identifier",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Links"
-                ],
-                "summary": "Update link by identifier",
-                "operationId": "update-link-by-id",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Link identifier",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Link data",
-                        "name": "params",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Link"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/primary.Link"
                         }
                     },
                     "400": {
@@ -293,16 +230,46 @@
                     }
                 }
             }
+        },
+        "/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Fetches link by unique identifier",
+                "tags": [
+                    "Links"
+                ],
+                "summary": "Fetch link by unique identifier",
+                "operationId": "get-link-by-uuid",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Link unique identifier",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ]
+            }
         }
     },
     "definitions": {
-        "models.Link": {
+        "primary.Link": {
             "type": "object",
             "properties": {
-                "fullURL": {
+                "expireIn": {
                     "type": "string"
                 },
-                "shortURL": {
+                "expiresAt": {
+                    "type": "string"
+                },
+                "fullUrl": {
+                    "type": "string"
+                },
+                "uuid": {
                     "type": "string"
                 }
             }

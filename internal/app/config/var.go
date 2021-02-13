@@ -8,9 +8,8 @@ import (
 )
 
 var (
-	Gorm       *gorm.DB
-	Database   *sqlx.DB
-	Templates  map[string]*template.Template
-	Clickhouse *sqlx.DB
-	Context    = context.Background()
+	Gorm      *gorm.DB
+	Database  *sqlx.DB
+	Templates map[string]*template.Template
+	Context   = context.Background()
 )

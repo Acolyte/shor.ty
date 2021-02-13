@@ -9,7 +9,7 @@ services:
   shorty-db:
     ports:
       - 15432:5432
-      
-  clickhouse:
+
+  shorty-redis:
     ports:
-      - 18123:8123
+      - 16379:6379

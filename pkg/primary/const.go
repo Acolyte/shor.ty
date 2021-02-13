@@ -1,4 +1,4 @@
-package shorty
+package primary
 
 const (
 	TableName string = "links"

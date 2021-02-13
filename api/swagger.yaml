@@ -1,10 +1,14 @@
 basePath: /api/v1
 definitions:
-  models.Link:
+  primary.Link:
     properties:
-      fullURL:
+      expireIn:
         type: string
-      shortURL:
+      expiresAt:
+        type: string
+      fullUrl:
+        type: string
+      uuid:
         type: string
     type: object
 host: shor.ty
@@ -20,6 +24,21 @@ info:
   title: Shorty API
   version: "1.0"
 paths:
+  /{id}:
+    get:
+      description: Fetches link by unique identifier
+      operationId: get-link-by-uuid
+      parameters:
+      - description: Link unique identifier
+        in: path
+        name: id
+        required: true
+        type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Fetch link by unique identifier
+      tags:
+      - Links
   /link/{id}:
     delete:
       consumes:
@@ -76,7 +95,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Link'
+              $ref: '#/definitions/primary.Link'
             type: array
         "400":
           description: Bad Request
@@ -102,7 +121,7 @@ paths:
         name: params
         required: true
         schema:
-          $ref: '#/definitions/models.Link'
+          $ref: '#/definitions/primary.Link'
       produces:
       - application/json
       responses:
@@ -139,7 +158,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Link'
+            $ref: '#/definitions/primary.Link'
         "400":
           description: Bad Request
           schema:
@@ -155,47 +174,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Fetch link by unique identifier
-      tags:
-      - Links
-    put:
-      consumes:
-      - application/json
-      description: Updates link by identifier
-      operationId: update-link-by-id
-      parameters:
-      - description: Link identifier
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Link data
-        in: body
-        name: params
-        required: true
-        schema:
-          $ref: '#/definitions/models.Link'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: Update link by identifier
       tags:
       - Links
 securityDefinitions:

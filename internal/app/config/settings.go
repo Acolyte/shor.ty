@@ -3,14 +3,13 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/ClickHouse/clickhouse-go"
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rbcervilla/redisstore"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
 	"os"
 	"strconv"
 	"text/template"
@@ -57,7 +56,6 @@ type Config struct {
 	Database     DatabaseConfig
 	Redis        RedisConfig
 	SessionRedis *redisstore.RedisStore
-	Clickhouse   DatabaseConfig
 }
 
 var Settings *Config
@@ -106,6 +104,9 @@ func getEnvAsInt(name string, defaultVal int) int {
 }
 
 func init() {
+	// load .env file
+	err := godotenv.Load(".env")
+
 	Templates = make(map[string]*template.Template)
 	Templates["index"] = template.Must(template.ParseFiles("./web/template/index.html"))
 	Templates["found"] = template.Must(template.ParseFiles("./web/template/found.html"))
@@ -126,12 +127,6 @@ func init() {
 				Name:   getEnv("DB_DATABASE", "db"),
 				Schema: getEnv("DB_SCHEMA", "public"),
 				Proto:  getEnv("DB_PROTOCOL", "tcp"),
-			},
-		},
-		Clickhouse: DatabaseConfig{
-			ConnectionType: getEnv("DB_CONNECTION", "clickhouse"),
-			ConnectionSettings: DBConnection{
-				DSN: getEnv("CH_DSN", "clickhouse"),
 			},
 		},
 		Redis: RedisConfig{
@@ -181,20 +176,4 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
-	ch, err := sqlx.Open(Settings.Clickhouse.ConnectionType, Settings.Clickhouse.ConnectionSettings.DSN)
-	if err != nil {
-		log.Println("Clickhouse not available")
-	} else {
-		if err := ch.Ping(); err != nil {
-			if exception, ok := err.(*clickhouse.Exception); ok {
-				log.Println("[%d] %s \n%s\n", exception.Code, exception.Message, exception.StackTrace)
-			} else {
-				log.Println("Clickhouse is not yet available")
-			}
-		}
-	}
-
-	Settings.Clickhouse.Connection = ch
-	Clickhouse = ch
 }

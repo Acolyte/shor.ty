@@ -65,7 +65,6 @@ func Serve() {
 	v1Links.Get(`/<id:\d+>`, shorty.LinkByIDHandler)
 	v1Links.Get(``, shorty.LinksListHandler)
 	v1Links.Post(``, shorty.LinkCreateHandler)
-	v1Links.Put(`/<id:\d+>`, shorty.LinkUpdateHandler)
 	v1Links.Delete(`/<id:\d+>`, shorty.LinkDeleteHandler)
 
 	http.Handle("/", router)
