@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"github.com/go-ozzo/ozzo-routing/v2"
+	routing "github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/go-ozzo/ozzo-routing/v2/access"
 	"github.com/go-ozzo/ozzo-routing/v2/content"
 	"github.com/go-ozzo/ozzo-routing/v2/fault"

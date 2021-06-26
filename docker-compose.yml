@@ -19,6 +19,8 @@ services:
       - DB_PASSWORD=db
       - DB_DATABASE=db
       - REDIS_HOST=shorty-redis
+      - DEBUG=true
+      - LINK_LENGTH=6
 
   shorty-db:
     image: postgres

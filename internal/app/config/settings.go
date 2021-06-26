@@ -51,11 +51,17 @@ type DatabaseConfig struct {
 	Connection         *sqlx.DB
 }
 
+type LinkConfig struct {
+	Length uint
+}
+
 type Config struct {
 	Server       ServerConfig
 	Database     DatabaseConfig
 	Redis        RedisConfig
 	SessionRedis *redisstore.RedisStore
+	Link         LinkConfig
+	Debug        bool
 }
 
 var Settings *Config
@@ -103,6 +109,16 @@ func getEnvAsInt(name string, defaultVal int) int {
 	return defaultVal
 }
 
+// Helper function to read an environment variable into boolean or return a default value
+func getEnvAsBool(name string, defaultVal bool) bool {
+	valueStr := getEnv(name, "")
+	if value, err := strconv.ParseBool(valueStr); err == nil {
+		return value
+	}
+
+	return defaultVal
+}
+
 func init() {
 	// load .env file
 	err := godotenv.Load(".env")
@@ -112,6 +128,7 @@ func init() {
 	Templates["found"] = template.Must(template.ParseFiles("./web/template/found.html"))
 
 	Settings = &Config{
+		Debug: getEnvAsBool("DEBUG", false),
 		Server: ServerConfig{
 			Host: getEnv("SERVER_HOST", "0.0.0.0"),
 			Port: getEnvAsInt("SERVER_PORT", 80),
@@ -138,6 +155,10 @@ func init() {
 				Proto:    getEnv("REDIS_PROTOCOL", "tcp"),
 			},
 		},
+
+		Link: LinkConfig{
+			Length: uint(getEnvAsInt("LINK_LENGTH", 16)),
+		},
 	}
 
 	dsn, err := Settings.Database.GetDSN()
@@ -157,6 +178,10 @@ func init() {
 	Gorm, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect to the database")
+	}
+
+	if Settings.Debug == true {
+		Gorm = Gorm.Debug()
 	}
 
 	client := redis.NewClient(&redis.Options{

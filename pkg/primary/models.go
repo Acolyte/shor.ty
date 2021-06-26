@@ -8,7 +8,7 @@ import (
 type (
 	Link struct {
 		ID   uint   `gorm:"primarykey" json:"-"`
-		UUID string `db:"uuid" json:"uuid" gorm:"size:32, uniqueIndex"`
+		UUID string `db:"uuid" json:"uuid" gorm:"size:32, type:varchar, uniqueIndex"`
 
 		CreatedAt time.Time    `db:"created_at" json:"-"`
 		UpdatedAt time.Time    `db:"updated_at" json:"-"`

@@ -6,6 +6,7 @@ import (
 	"github.com/rs/xid"
 	"gorm.io/gorm"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -177,7 +178,7 @@ func CreateLink(URL string, ExpiresIn string) (link primary.Link, error int) {
 	UUID := ""
 	Found := true
 	for index := 0; index < 10; index++ {
-		UUID = xid.New().String()
+		UUID = StringWithCharset(config.Settings.Link.Length, primary.DefaultUUIDCharset)
 		err := config.Gorm.Where("uuid = ?", xid.New().String()).Find(&primary.Link{}).Error
 		if err == nil || err == gorm.ErrRecordNotFound {
 			Found = false
@@ -262,7 +263,7 @@ func ParseDuration(str string) time.Duration {
 	minutes := parseDurationPart(matches[5], time.Second*60)
 	seconds := parseDurationPart(matches[6], time.Second)
 
-	return time.Duration(years + months + days + hours + minutes + seconds)
+	return years + months + days + hours + minutes + seconds
 }
 
 func parseDurationPart(value string, unit time.Duration) time.Duration {
@@ -272,4 +273,14 @@ func parseDurationPart(value string, unit time.Duration) time.Duration {
 		}
 	}
 	return 0
+}
+
+func StringWithCharset(length uint, charset string) string {
+	var seededRand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
 }

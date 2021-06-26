@@ -10,4 +10,7 @@ const (
 	Period1week  = "P1W"
 	Period1month = "P1M"
 	Period1year  = "P1Y"
+
+	DefaultUUIDCharset = "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" + "0123456789"
 )
