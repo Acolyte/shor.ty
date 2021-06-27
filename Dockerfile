@@ -35,8 +35,8 @@ COPY --from=downloader /go/src/github.com/golang-migrate/migrate/build/migrate.l
 COPY ./migration /migration
 COPY ./web /usr/local/app/web
 
-# RUN mkdir /usr/local/app/bin/swagger
-# COPY --from=build /usr/local/app/api/swagger.json swagger/swagger.json
-# COPY --from=build /usr/local/app/api/swagger.yaml swagger/swagger.yaml
+RUN mkdir /usr/local/app/bin/swagger
+COPY --from=build /usr/local/app/api/swagger.json swagger/swagger.json
+COPY --from=build /usr/local/app/api/swagger.yaml swagger/swagger.yaml
 
 CMD /usr/local/app/bin/shorty
