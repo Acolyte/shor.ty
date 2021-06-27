@@ -21,9 +21,6 @@ COPY go.sum .
 RUN go mod download
 COPY . .
 
-# RUN go get -u github.com/swaggo/swag/cmd/swag
-# RUN swag init -g ./internal/app/shorty/api/routers.go -o ./api --parseDependency --parseInternal --parseVendor
-
 RUN go build -ldflags "-s -w" -o shorty ./cmd/shorty/main.go
 
 FROM alpine:3.8 as app
