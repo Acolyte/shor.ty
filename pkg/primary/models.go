@@ -1,27 +1,26 @@
 package primary
 
 import (
-	"database/sql"
+	"gorm.io/gorm"
 	"time"
 )
 
 type (
 	Link struct {
-		ID   uint   `gorm:"primarykey" json:"-"`
-		UUID string `db:"uuid" json:"uuid" gorm:"size:32, type:varchar, uniqueIndex"`
+		ID        uint   `gorm:"primarykey"`
+		UUID      string `db:"uuid" gorm:"size:32, type:varchar, uniqueIndex"`
+		FullURL   string `db:"full_url" gorm:"size:2048"`
+		Scheme    string `db:"scheme" gorm:"size:8,index:idx_scheme"`
+		Host      string `db:"host" gorm:"size:255, index:idx_host"`
+		Port      int    `db:"host" gorm:"index:idx_port"`
+		Path      string `db:"path" gorm:"index:idx_path"`
+		Query     string `db:"query" gorm:"index:idx_query"`
+		ExpiresIn string `db:"-"`
 
-		CreatedAt time.Time    `db:"created_at" json:"-"`
-		UpdatedAt time.Time    `db:"updated_at" json:"-"`
-		DeletedAt sql.NullTime `db:"deleted_at" gorm:"index" json:"-"`
-		ExpiresIn string       `db:"-" json:"expireIn"`
-		ExpiresAt time.Time    `db:"expires_at" json:"expiresAt"`
-
-		FullURL string `db:"full_url" json:"fullUrl" gorm:"size:2048"`
-		Scheme  string `db:"scheme" json:"-" gorm:"size:8,index:idx_scheme"`
-		Host    string `db:"host" json:"-" gorm:"size:255, index:idx_host"`
-		Port    int    `db:"host" json:"-" gorm:"index:idx_port"`
-		Path    string `db:"path" json:"-" gorm:"index:idx_path"`
-		Query   string `db:"query" json:"-" gorm:"index:idx_query"`
+		CreatedAt time.Time
+		UpdatedAt time.Time
+		DeletedAt gorm.DeletedAt `gorm:"index"`
+		ExpiresAt time.Time      `db:"expires_at" json:"expiresAt"`
 	}
 
 	FoundViewData struct {

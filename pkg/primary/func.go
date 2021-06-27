@@ -2,7 +2,7 @@ package primary
 
 import (
 	"encoding/json"
-	url2 "net/url"
+	"net/url"
 )
 
 // TableName имя таблицы для сущности Link
@@ -10,16 +10,16 @@ func (Link) TableName() string {
 	return TableName
 }
 
-func (l Link) MarshalJSON() ([]byte, error) {
-	url := url2.URL{
-		Scheme:      l.Scheme,
+func (link Link) MarshalJSON() ([]byte, error) {
+	URL := url.URL{
+		Scheme:      link.Scheme,
 		Opaque:      "",
 		User:        nil,
-		Host:        l.Host,
-		Path:        l.Path,
+		Host:        link.Host,
+		Path:        link.Path,
 		RawPath:     "",
 		ForceQuery:  false,
-		RawQuery:    l.Query,
+		RawQuery:    link.Query,
 		Fragment:    "",
 		RawFragment: "",
 	}
@@ -28,7 +28,7 @@ func (l Link) MarshalJSON() ([]byte, error) {
 		FullURL string `json:"fullUrl"`
 		UUID    string `json:"uuid"`
 	}{
-		UUID:    l.UUID,
-		FullURL: url.String(),
+		UUID:    link.UUID,
+		FullURL: URL.String(),
 	})
 }

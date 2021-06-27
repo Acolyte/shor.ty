@@ -45,3 +45,14 @@ plain-build: plain-swagger plain-assemble
 .PHONY: plain-run
 plain-run:
 	@cp ./.env ./bin/.env && ./bin/shorty
+
+.PHONY: migrate-up
+migrate-up:
+	@docker-compose exec shorty bin/migrate -database "postgres://db:db@shorty-db:5432/db?sslmode=disable" -path /migration up
+
+.PHONY: migrate-down
+migrate-down:
+	@docker-compose exec shorty bin/migrate -database "postgres://db:db@shorty-db:5432/db?sslmode=disable" -path /migration down
+
+.PHONY: migrate
+migrate: migrate-down migrate-up
