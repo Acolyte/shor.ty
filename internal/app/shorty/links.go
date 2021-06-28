@@ -170,6 +170,11 @@ func LinkDeleteHandler(c *routing.Context) error {
 }
 
 func CreateLink(URL string, ExpiresIn string) (link primary.Link, error int) {
+	_, err := url.ParseRequestURI(URL)
+	if err != nil {
+		return link, http.StatusBadRequest
+	}
+
 	u, err := url.Parse(URL)
 	if err != nil {
 		return link, http.StatusBadRequest
