@@ -83,7 +83,7 @@ func CreateHandler(c *routing.Context) error {
 		}
 	}
 
-	viewData := primary.FoundViewData{HostURL: c.Request.Proto + "://" + Host, Link: link}
+	viewData := primary.FoundViewData{HostURL: "https://" + Host, Link: link}
 	if err := tmpl.Execute(c.Response, viewData); err != nil {
 		log.Printf("Failed to execute template: %v", err)
 		return c.WriteWithStatus("Internal Server Error", 500)
