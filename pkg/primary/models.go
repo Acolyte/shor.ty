@@ -27,4 +27,8 @@ type (
 		Link
 		HostURL string
 	}
+
+	ErrorViewData struct {
+		Message string
+	}
 )

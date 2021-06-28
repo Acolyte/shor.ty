@@ -4,6 +4,7 @@ import (
 	"errors"
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/rs/xid"
+	"golang.org/x/net/idna"
 	"gorm.io/gorm"
 	"log"
 	"math/rand"
@@ -13,6 +14,7 @@ import (
 	"shorty/internal/app/config"
 	"shorty/pkg/primary"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -38,8 +40,28 @@ func CreateHandler(c *routing.Context) error {
 	}
 
 	if len(URL) == 0 {
-		c.Response.Header().Set("Location", c.Request.URL.String())
-		return c.WriteWithStatus("No Content", 204)
+		tmpl := config.Templates["index"]
+		if tmpl == nil {
+			return c.WriteWithStatus("Internal Server Error", 500)
+		}
+
+		if err := tmpl.Execute(c.Response, nil); err != nil {
+			log.Printf("Failed to execute template: %v", err)
+			return c.WriteWithStatus("Internal Server Error", 500)
+		}
+	}
+
+	_, err := url.ParseRequestURI(URL)
+	if err != nil {
+		tmpl := config.Templates["index"]
+		if tmpl == nil {
+			return c.WriteWithStatus("Internal Server Error", 500)
+		}
+
+		if err := tmpl.Execute(c.Response, nil); err != nil {
+			log.Printf("Failed to execute template: %v", err)
+			return c.WriteWithStatus("Internal Server Error", 500)
+		}
 	}
 
 	link, errCode := CreateLink(URL, ExpiresIn)
@@ -52,7 +74,16 @@ func CreateHandler(c *routing.Context) error {
 		return c.WriteWithStatus("Internal Server Error", 500)
 	}
 
-	viewData := primary.FoundViewData{HostURL: "http://" + c.Request.Host, Link: link}
+	Host := c.Request.Host
+	if strings.HasPrefix(c.Request.Host, "xn--") {
+		Host, err = idna.New().ToUnicode(Host)
+		if err != nil {
+			log.Println("Failed to convert Punycode to Unicode")
+			return c.WriteWithStatus("Internal Server Error", 500)
+		}
+	}
+
+	viewData := primary.FoundViewData{HostURL: c.Request.Proto + "://" + Host, Link: link}
 	if err := tmpl.Execute(c.Response, viewData); err != nil {
 		log.Printf("Failed to execute template: %v", err)
 		return c.WriteWithStatus("Internal Server Error", 500)

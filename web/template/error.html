@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shor.ty</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+</head>
+<body>
+<div class="d-flex vh-100">
+    <div class="container h-100">
+        <div class="row align-items-center h-100">
+            <div class="col-8 mx-auto">
+                <div class="jumbotron" style="background-color: transparent">
+                    <form class="row" action="/" id="link-form" method="post">
+                        <div class="col-xl-10">
+                            <label for="link-content" class="visually-hidden">Link</label>
+                            <input type="text" class="form-control" name="url" autocomplete="off" id="link-content" placeholder="Link">
+                        </div>
+                        <div class="col-auto">
+                            <input type="submit" class="btn btn-primary mb-5" value="Shorten">
+                        </div>
+                    </form>
+                    <div class="alert alert-warning row" role="alert">
+                        <center>
+                           {{ .Message }}
+                        </center>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
