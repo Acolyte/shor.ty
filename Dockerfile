@@ -21,19 +21,21 @@ COPY go.sum .
 RUN go mod download
 COPY . .
 
-RUN go build -ldflags "-s -w" -o shorty ./cmd/shorty/main.go
+RUN go build -ldflags "-s -w" -o gen/api ./cmd/shorty/api/main.go
+RUN go build -ldflags "-s -w" -o gen/web ./cmd/shorty/web/main.go
 
 FROM alpine:3.8 as app
 RUN apk add ca-certificates tzdata mysql-client --update && rm -rf /var/cache/apk/*
 
 WORKDIR /usr/local/app
-COPY --from=build /usr/local/app/shorty bin/shorty
+COPY --from=build /usr/local/app/gen/api bin/api
+COPY --from=build /usr/local/app/gen/web bin/web
+
 COPY --from=downloader /go/src/github.com/golang-migrate/migrate/build/migrate.linux-386 bin/migrate
 COPY ./migration /migration
 COPY ./web /usr/local/app/web
 
-RUN mkdir /usr/local/app/bin/swagger
 COPY --from=build /usr/local/app/api/swagger.json swagger/swagger.json
 COPY --from=build /usr/local/app/api/swagger.yaml swagger/swagger.yaml
 
-CMD /usr/local/app/bin/shorty
+CMD /usr/local/app/bin/web

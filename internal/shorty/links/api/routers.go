@@ -10,8 +10,8 @@ import (
 	"github.com/go-ozzo/ozzo-routing/v2/slash"
 	"log"
 	"net/http"
-	"shorty/internal/app/config"
-	"shorty/internal/app/shorty"
+	"shorty/internal/shorty/config"
+	"shorty/internal/shorty/links/web"
 )
 
 // @title Shorty API
@@ -44,10 +44,10 @@ func Serve() {
 	router.Get("/js/*", file.Server(file.PathMap{
 		"/": "/web/static/",
 	}))
-	router.Get("/", shorty.IndexHandler)
-	router.Post("/", shorty.CreateHandler)
+	router.Get("/", web.IndexHandler)
+	router.Post("/", web.CreateHandler)
 
-	router.Get("/<id:[0-9a-zA-Z]*>", shorty.LinkByUUIDHandler)
+	router.Get("/<id:[0-9a-zA-Z]*>", web.LinkByUUIDHandler)
 
 	apiV1 := router.Group(`/api/v1`)
 	apiV1.Use(
@@ -62,10 +62,10 @@ func Serve() {
 
 	v1Links := apiV1.Group("/links")
 
-	v1Links.Get(`/<id:\d+>`, shorty.LinkByIDHandler)
-	v1Links.Get(``, shorty.LinksListHandler)
-	v1Links.Post(``, shorty.LinkCreateHandler)
-	v1Links.Delete(`/<id:\d+>`, shorty.LinkDeleteHandler)
+	v1Links.Get(`/<id:\d+>`, LinkByIDHandler)
+	v1Links.Get(``, LinksListHandler)
+	v1Links.Post(``, LinkCreateHandler)
+	v1Links.Delete(`/<id:\d+>`, LinkDeleteHandler)
 
 	http.Handle("/", router)
 	log.Printf("Server is running at %s:%d", config.Settings.Server.Host, config.Settings.Server.Port)

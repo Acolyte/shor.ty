@@ -1,7 +1,7 @@
 package main
 
 import (
-	"shorty/internal/app/shorty/api"
+	"shorty/internal/shorty/links/api"
 )
 
 func main() {
